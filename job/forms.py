@@ -25,9 +25,7 @@ class JobForm(forms.ModelForm):
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg', 
                 'placeholder': 'empresa@example.com'
             }),
-            'mode': forms.Select(attrs={
-                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg'
-            }),
+            
             'company': forms.Select(attrs={
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg'
             }),
