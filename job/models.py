@@ -18,8 +18,14 @@ class Skills(models.Model):
     
 
 class Job(models.Model):
+    
+    MODE_CHOICES = [
+        ('presencial', 'Presencial'),
+        ('remoto', 'Remoto'),
+        ('hibrido', 'Híbrido'),
+    ]
     title = models.CharField(max_length=30)
-    mode = models.ForeignKey(Mode, on_delete=models.CASCADE)
+    models.CharField(max_length=20, choices=MODE_CHOICES, default='presencial')
     email = models.CharField(max_length=100, default='correo@gmail.com')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
     address = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
