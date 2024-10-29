@@ -32,7 +32,7 @@ class ListJobsView(LoginRequiredMixin, ListView):
         context["background"] = "bg-slate-100"	
         
 
-        counter = VisitCounter.objects.get(id=1)
+        counter = VisitCounter.objects.get(id=1, count=0)
         context['visit_count'] = counter.count
 
         return context
@@ -56,7 +56,7 @@ class ListJobsView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["background"] = "bg-slate-100"	
         
-        counter = VisitCounter.objects.get(id=1)
+        counter = VisitCounter.objects.get(id=1, count=0)
         context['visit_count'] = counter.count
 
         return context
@@ -137,7 +137,7 @@ def increment_counter(request):
     if request.method == 'POST':
         try:
             # Obtener o crear el contador
-            counter, created = VisitCounter.objects.get_or_create(id=1)
+            counter, created = VisitCounter.objects.get_or_create(id=1, count=0)
             
             # Obtener el ID del navegador del usuario 
             browser_id = request.POST.get('browser_id')
@@ -177,7 +177,7 @@ def increment_counter(request):
 @require_http_methods(["GET"])
 def get_counter(request):
     try:
-        counter = VisitCounter.objects.get(id=1)
+        counter = VisitCounter.objects.get(id=1, count=0)
         return JsonResponse({'count': counter.count})
     except VisitCounter.DoesNotExist:
         return JsonResponse({'count': 0})
