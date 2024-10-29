@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center h-screen bg-gray-300">
+    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
+        <div class="text-center mb-6">
+            <p class="text-gray-700">¿Ya tienes una cuenta? 
+                <a href="{% url 'login' %}" class="text-blue-500 hover:underline">Inicia sesión</a>
+            </p>
+            <h2 class="text-3xl font-bold text-gray-800">Suscríbete</h2>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <!--este campo hace el nombre y apellido el w-full hace que estableca el ancho de elemento-->
+            <div class="flex space-x-4 mb-4">
+                <div class="w-1/2">
+                    <!-- px-4 eston son los pading horizontal que queden alado del otro border añade el dorde lo que es 
+                     alrededor del elemento y le damos un todo gris con el dorder-gray -->
+                     {{ form.first_name }}
+                     {% for error in form.first_name.errors %}
+                        <p class="text-danger">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                
+                <div class="w-1/2">
+                    {{ form.last_name }}
+                    {% for error in form.last_name.errors %}
+                        <p class="text-danger">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- creamos otra clase para el emeil-->
+            <div class="flex space-x-4 mb-4">
+                <div class="w-1/2">
+                    {{ form.email }}
+                    {% for error in form.email.errors %}
+                        <p class="text-danger">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                <div class="w-1/2">
+                    {{ form.username }}
+                    {% for error in form.username.errors %}
+                        <p class="text-danger">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <!--creamos otra clase paa la contraseña -->
+            <div class="mb-4">
+                {{ form.password1 }}
+                {% for error in form.password1.errors %}
+                    <p class="text-danger">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div class="mb-4">
+                {{ form.password2 }}
+                {% for error in form.password2.errors %}
+                    <p class="text-danger">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div class="flex items-center justify-start mb-4">
+                <label class="inline-flex items-center">
+                    <input type="checkbox" class="form-checkbox text-blue-500">
+                    <span class="ml-2 text-gray-700">Recodar</span>
+                </label>
+            </div>
+            <div>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded transition-all">
+                    Registrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
