@@ -301,3 +301,152 @@ def get_context_data(self, **kwargs):
         counter = None  # O maneja esto como prefieras
     context['counter'] = counter
     return context
+
+
+
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
+from datetime import timedelta
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from .models import Job, VisitCounter, BrowserVisit, Postulacion
+from django.db.models import OuterRef, Subquery, Case, When, Value, CharField
+
+class ListJobsView(LoginRequiredMixin, ListView):
+    model = Job
+    template_name = 'job/listJob.html'
+    
+    def get_queryset(self):
+        user = self.request.user
+        latest_postulation = Postulacion.objects.filter(
+            job=OuterRef('pk'),
+            usuario=user
+        ).order_by('-fecha_postulacion')
+        
+        return Job.objects.annotate(
+            postulation_status=Case(
+                When(user=user, then=Value('')),
+                default=Subquery(latest_postulation.values('estado')[:1]),
+                output_field=CharField()
+            )
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["background"] = "bg-slate-100"
+        
+        try:
+            counter, created = VisitCounter.objects.get_or_create(
+                id=1,
+                defaults={'count': 0}
+            )
+            context['visit_count'] = counter.count
+        except Exception as e:
+            context['visit_count'] = 0
+            print(f"Error al obtener el contador: {e}")
+
+        return context
+
+@csrf_exempt
+def increment_counter(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        # Obtener o crear el contador
+        counter, created = VisitCounter.objects.get_or_create(
+            id=1,
+            defaults={'count': 0, 'last_reset': timezone.now()}
+        )
+        
+        # Obtener información del visitante
+        browser_id = request.POST.get('browser_id')
+        if not browser_id:
+            return JsonResponse({'error': 'Browser ID no proporcionado'}, status=400)
+        
+        # Obtener IP
+        ip_address = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0] or request.META.get('REMOTE_ADDR')
+        
+        # Verificar si ya existe una visita reciente (últimas 24 horas)
+        time_threshold = timezone.now() - timedelta(hours=24)
+        
+        browser_visit, visit_created = BrowserVisit.objects.get_or_create(
+            browser_id=browser_id,
+            ip_address=ip_address,
+            defaults={'last_visit': timezone.now()}
+        )
+        
+        if visit_created or browser_visit.last_visit < time_threshold:
+            # Actualizar la última visita
+            browser_visit.last_visit = timezone.now()
+            browser_visit.save()
+            
+            # Incrementar el contador
+            new_count = counter.increment()
+            return JsonResponse({
+                'success': True,
+                'count': new_count,
+                'message': 'Contador incrementado correctamente'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'count': counter.count,
+                'message': 'Visita ya registrada en las últimas 24 horas'
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@login_required
+def get_counter(request):
+    try:
+        counter = get_object_or_404(VisitCounter, id=1)
+        return JsonResponse({
+            'success': True,
+            'count': counter.count,
+            'last_reset': counter.last_reset
+        })
+    except VisitCounter.DoesNotExist:
+        counter = VisitCounter.objects.create(id=1, count=0)
+        return JsonResponse({
+            'success': True,
+            'count': 0,
+            'last_reset': counter.last_reset
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+# Si necesitas reiniciar el contador (opcional)
+@login_required
+def reset_counter(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        counter = get_object_or_404(VisitCounter, id=1)
+        counter.count = 0
+        counter.last_reset = timezone.now()
+        counter.save()
+        
+        # También podríamos limpiar las visitas antiguas
+        BrowserVisit.objects.all().delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Contador reiniciado correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
