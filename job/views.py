@@ -290,3 +290,14 @@ def increment_counter(request):
     profile.visit_count += 1
     profile.save()
     return JsonResponse({'count': profile.visit_count})
+
+from django.http import Http404
+
+def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    try:
+        counter = VisitCounter.objects.get(id=1)
+    except VisitCounter.DoesNotExist:
+        counter = None  # O maneja esto como prefieras
+    context['counter'] = counter
+    return context
