@@ -18,14 +18,14 @@ class Skills(models.Model):
     
 
 class Job(models.Model):
-    
     MODE_CHOICES = [
-        ('presencial', 'Presencial'),
-        ('remoto', 'Remoto'),
-        ('hibrido', 'Híbrido'),
+        ('Híbrida', 'Híbrida'),
+        ('Presencial', 'Presencial'),
+        ('Remota', 'Remota'),
     ]
+
     title = models.CharField(max_length=30)
-    models.CharField(max_length=20, choices=MODE_CHOICES, default='presencial')
+    mode = models.CharField(max_length=10, choices=MODE_CHOICES, blank=True, null=True)  # Aquí están las opciones
     email = models.CharField(max_length=100, default='correo@gmail.com')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
     address = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
@@ -33,9 +33,9 @@ class Job(models.Model):
     skills = models.ForeignKey(Skills, on_delete=models.CASCADE)
     description = models.TextField(max_length=1500, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+
     def __str__(self):
         return f"{self.title}"
-
 
 
 class VisitCounter(models.Model):
